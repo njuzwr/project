@@ -27,7 +27,7 @@ def getposition(request):
     # return HttpResponse(position, content_type="text/plain")
 
 
-def order(request, pid, s_time, c_time, name, size):
+def order(request, p, st, ct, n, s):
     """用于处理订单的预订，返回预约成功的标志位
     order_id:所预约的充电桩编号id
     order_time:要预约的时间
@@ -35,9 +35,22 @@ def order(request, pid, s_time, c_time, name, size):
     username:用户名
     """
     # 试试使用timestamp类型，应该更加方便地计算时间
-    p = Position.objects.get(id=pid)
+    p = Position.objects.get(id=p)
     Status.objects.filter(position = p).update(status=2)
-    u = User.objects.get(username = name)
-    o = Order.objects.create(position = p, user= u, start_time=unquote(s_time), charge_time = c_time, size = 1)
+    u = User.objects.get(username = n)
+    o = Order.objects.create(position = p, user= u, start_time=unquote(st), charge_time = ct, size = s)
     o.save()
     return HttpResponse('Succeed!')
+
+
+def cancel_order(request):
+    """
+    用于订单的取消，取消成功则返回 succeed
+    """
+
+    return HttpResponse('Succeed!')
+
+
+def test(request, *pid, **s):
+    r = (pid, s)
+    return HttpResponse(r)

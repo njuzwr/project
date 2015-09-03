@@ -16,13 +16,16 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from server.views import getversion, getposition, order
+from server.views import getversion, getposition, order, test
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^getversion/', getversion),
     url(r'^getposition/', getposition),
-    url(r'^order/?P<pid>\d+/?P<s_time>\d{4}-\d+-\d{2}%20\d+%3A\?P<c_time>d{2}\?<name>[A-Za-z0-9]+\?<s>\d+', order),
+    # url(r'^order/(?P<p>\d+)/(?P<st>\d{4}-\d+-\d{2}%20\d+%3A\d{2})/(?P<cte>\d+)/(?P<n>\w+)/(?P<s>\d+)/', order),
+    url(r'^order/\d+/\d{4}-\d+-\d+%\d+/',test),
+    url(r'^test/(?P<pid>\d+)/(?P<s>\d+)/',test),
     # 匹配 2015-9-12 8：00
     # 采用timestamp类型
+
 
 ]

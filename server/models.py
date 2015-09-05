@@ -21,7 +21,8 @@ class Status(models.Model):
     def __str__(self):
         return str(self.position_id)
 # Fields: position(One-to-One relationship), status
-# status:0-avaliable 1-charging 2-ordered
+# status:0-avaliable -1-charging -2-not avaliable, cannot be ordered
+#       :>1-amounts of orders
 
 
 class User(models.Model):

@@ -1,9 +1,13 @@
 # -*- coding:utf-8 -*-
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404, get_list_or_404
 from django.http import HttpResponse, JsonResponse
 from django.core.serializers import serialize
 import json
-from urllib.parse import unquote
+from datetime import datetime
+
+from django.views.decorators.csrf import csrf_exempt
+# test for post
+
 from server.models import Position, DatabaseVersion, User, Status, Order
 # Create your views here.
 
@@ -27,18 +31,38 @@ def getposition(request):
     # return HttpResponse(position, content_type="text/plain")
 
 
-def order(request, p, st, ct, n, s):
+def signup(request, username, password):
+    "用于处理用户的注册及注册信息的保存"
+
+    return HttpResponse('Succeed')
+
+
+def signin(request, username, password):
+    "用于处理用户的登录验证"
+
+    return HttpResponse('Succeed')
+
+
+def order(request, pid, stime, ctime, name, s):
     """用于处理订单的预订，返回预约成功的标志位
-    order_id:所预约的充电桩编号id
-    order_time:要预约的时间
-    charge_time:充电时间
-    username:用户名
+    pid:所预约的充电桩编号id
+    stime:要预约的时间
+    ctime:充电时间
+    name:用户名
+    s:车型
     """
     # 试试使用timestamp类型，应该更加方便地计算时间
-    p = Position.objects.get(id=p)
-    Status.objects.filter(position = p).update(status=2)
-    u = User.objects.get(username = n)
-    o = Order.objects.create(position = p, user= u, start_time=unquote(st), charge_time = ct, size = s)
+    pos = get_object_or_404(Position, id=pid)
+    # It is equivalent to:
+    # try...except...
+
+    # Status.objects.filter(position = pos).update(status=2)
+    get_list_or_404(Status, position=pos).update(status=2)
+    u = get_object_or_404(User, username=name)
+
+    st = datetime.fromtimestamp(stime)
+    # timestamp->datetime
+    o = Order.objects.create(position=pos, user=u, start_time=st, charge_time=ctime, size=s)
     o.save()
     return HttpResponse('Succeed!')
 
@@ -51,6 +75,11 @@ def cancel_order(request):
     return HttpResponse('Succeed!')
 
 
-def test(request, *pid, **s):
-    r = (pid, s)
-    return HttpResponse(r)
+@csrf_exempt
+# POST方式时必须加
+def test(request):
+    json_data = request.read()
+    # data = json.loads(json_data)
+    with open('D://d.json', 'w+') as f:
+        f.write(str(json_data))
+    return HttpResponse('Received')

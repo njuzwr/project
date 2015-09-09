@@ -19,7 +19,7 @@ from django.contrib import admin
 from server.views import getversion, getposition, order, test
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
-    url(r'^getversion/', getversion),
+    url(r'^getversion/', getversion, name='getversion'),
     url(r'^getposition/', getposition),
     url(r'^order/(?P<pid>\d+)/(?P<stime>\d+.\d+)/(?P<ctime>\d+)/(?P<name>\w+)/(?P<s>\d+)/', order),
     # url(r'^order/\d+/\d{4}-\d+-\d+%\d+/',test),

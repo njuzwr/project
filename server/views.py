@@ -3,19 +3,19 @@ from django.shortcuts import render, get_object_or_404, get_list_or_404
 from django.http import HttpResponse, JsonResponse
 from django.core.serializers import serialize
 import json
-from datetime import datetime
+from datetime import datetime, date, time
 
 from django.views.decorators.csrf import csrf_exempt
 # test for post
 
-from server.models import Position, DatabaseVersion, User, Status, Order
+from server.models import Position, DatabaseVersion, User, Order
 # Create your views here.
 
 
 def getversion(request):
-    "用于获取位置信息的数据库版本，返回json数据格式"
+    "用于获取位置信息的数据库版本，返回字符串"
     version = DatabaseVersion.objects.all().last().version
-    response = "<html><body>Database version is %d </body></html>" % version
+    response = "<html><body>%d </body></html>" % version
     return HttpResponse(response)
     # return HttpResponse(version)
 
@@ -43,13 +43,51 @@ def signin(request, username, password):
     return HttpResponse('Succeed')
 
 
-def order(request, pid, stime, ctime, name, s):
-    """用于处理订单的预订，返回预约成功的标志位
-    pid:所预约的充电桩编号id
-    stime:要预约的时间
-    ctime:充电时间
-    name:用户名
-    s:车型
+def orders1(request, user, stime, etime, type):
+    """
+    订单的第一个请求阶段
+    :param request:
+    :param user: 用户名
+    :param stime: 充电开始时间
+    :param etime: 充电结束时间
+    :param type: 车型
+    :return:返回可用充电桩的pid
+    """
+    # 利用集合set判断时间是否可用
+    dt1 = datetime.combine(date.today(), time.min)
+    dt2 = datetime.combine(date.today(), time(23, 59, 59))
+    ds1 = int(datetime.timestamp(dt1))
+    ds2 = int(datetime.timestamp(dt2))
+    fullset = set(range(ds1, ds2 + 1, 600))  # 00:00:00~23:59:59
+
+    st = int(datetime.timestamp(stime))
+    et = int(datetime.timestamp(etime))
+    time_need = set(range(st, et + 1, 600))
+
+    pos = Position.objects.all()
+    pos_amount = Position.objects.count()
+    pos_available = []
+    for i in range(pos_amount):
+        f1set = fullset
+        order = pos[i].order_set.filter(status=0)
+        order_amount = pos[i].order_set.filter(status=0).count()
+        for j in range(order_amount):
+            s = int(datetime.timestamp(order[j].stime))
+            j = int(datetime.timestamp(order[j].etime))
+            time_used = set(range(s, j + 1, 600))
+            time_available = f1set - time_used
+        if time_need <= time_available:
+            pos_available.append(pos[i].id)
+
+    return JsonResponse(pos_available)
+
+
+def orders2(request, user, pid, stime, ctime, t):
+    """
+    订单请求的第二个阶段
+    :param request:
+    :param pid: 接收充电桩号pid
+    :return:
     """
     # 试试使用timestamp类型，应该更加方便地计算时间
     pos = get_object_or_404(Position, id=pid)
@@ -57,12 +95,11 @@ def order(request, pid, stime, ctime, name, s):
     # try...except...
 
     # Status.objects.filter(position = pos).update(status=2)
-    get_list_or_404(Status, position=pos).update(status=2)
-    u = get_object_or_404(User, username=name)
+    u = get_object_or_404(User, username=user)
 
     st = datetime.fromtimestamp(stime)
     # timestamp->datetime
-    o = Order.objects.create(position=pos, user=u, start_time=st, charge_time=ctime, size=s)
+    o = Order.objects.create(position=pos, user=u, start_time=st, charge_time=ctime, type=t)
     o.save()
     return HttpResponse('Succeed!')
 

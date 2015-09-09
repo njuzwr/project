@@ -4,31 +4,29 @@ from django.db import models
 # Create your models here.
 
 
+class DatabaseVersion(models.Model):
+    version = models.IntegerField()
+    log = models.CharField(max_length=100, default=None)
+    author = models.CharField(max_length=20, default=None)
+    time_revise = models.DateTimeField(default=None)
+
+    def __str__(self):
+        return str(self.version)
+
+
 class Position(models.Model):
-    size_supported = models.CharField(max_length=5)
+    type = models.CharField(max_length=10, default=None)
     longitude = models.CharField(max_length=20)
     latitude = models.CharField(max_length=20)
 
     def __str__(self):
         return str(self.id)
-# Fields:id, size, longitude, latitude
-
-
-class Status(models.Model):
-    position = models.OneToOneField(Position,primary_key=True)
-    status = models.IntegerField()
-
-    def __str__(self):
-        return str(self.position_id)
-# Fields: position(One-to-One relationship), status
-# status:0-avaliable -1-charging -2-not avaliable, cannot be ordered
-#       :>1-amounts of orders
 
 
 class User(models.Model):
     username = models.CharField(max_length=20)
-    password = models.CharField(max_length=50)
-    balance = models.DecimalField(max_digits=15, decimal_places=5)
+    password = models.CharField(max_length=20)
+    balance = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
         return self.username
@@ -37,21 +35,14 @@ class User(models.Model):
 class Order(models.Model):
     position = models.ForeignKey(Position)
     user = models.OneToOneField(User, primary_key=True)
-    start_time = models.DateTimeField()
-    charge_time = models.CharField(max_length=5,default=None)
-    size = models.CharField(max_length=5)
-
+    stime = models.DateTimeField(default=None)  # 充电开始时间
+    etime = models.DateTimeField(default=None)  # 充电结束时间
+    type = models.CharField(max_length=5, default=None)  # 车型
+    status = models.IntegerField(default=0)  # 订单状态：订单完成或取消为1，默认为0
+    charge_p = models.CharField(max_length=5, default=None)  # 充电百分比
 
     def __str__(self):
         return self.user.username
 # Fields:position(many-to-one relationship), user(one-to-one relationship)
 
 
-class DatabaseVersion(models.Model):
-    version = models.IntegerField()
-    log = models.CharField(max_length=100)
-    author = models.CharField(max_length=20)
-    time_revise = models.DateTimeField()
-
-    def __str__(self):
-        return str(self.version)

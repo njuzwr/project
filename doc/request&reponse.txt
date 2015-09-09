@@ -1,0 +1,18 @@
+信息交互说明
+Stage1:数据库版本的确认与数据库的发送
+    # A is android App, S is server
+    1.A->S:getversion
+     .S->A:version number
+
+    2.A-S:getdatabase
+     .S-A:database, use Json
+Stage2:
+    3.A->S:send user/stime/etime/type
+     .S->A:return available pid, use string
+
+    4.A->S:send pid/user/stime/ctime/type
+     .S->A:return auth_code(4 bits random numbers)
+
+Stage3: cancel order
+    5.A->S:send user
+     .S->A:return Yes or No

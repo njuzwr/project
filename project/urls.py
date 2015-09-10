@@ -16,17 +16,20 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from server.views import getversion, getposition, order, test
+from server.views import getversion, getposition, orders1, orders2, test
+from server.views import getorderstatus, getchargingstatus, getbalance, ordercancel
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^getversion/', getversion, name='getversion'),
     url(r'^getposition/', getposition),
-    url(r'^order/(?P<pid>\d+)/(?P<stime>\d+.\d+)/(?P<ctime>\d+)/(?P<name>\w+)/(?P<s>\d+)/', order),
-    # url(r'^order/\d+/\d{4}-\d+-\d+%\d+/',test),
-    # url(r'^test/(?P<pid>\d+)/(?P<s>\d+)/',test),
-    url(r'^test/', test)
-    # 匹配 2015-9-12 8：00
-    # 采用timestamp类型
+    url(r'^getorderstatus/', getorderstatus),
+    url(r'^getchargingstatus/', getchargingstatus),
+    url(r'^getbalance/', getbalance),
+    url(r'^orders1/', orders1),
+    url(r'^orders2/', orders2),
+    url(r'^ordercancel', ordercancel),
+    url(r'^test/', test),
+
 
 
 ]

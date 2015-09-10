@@ -4,6 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from django.core.serializers import serialize
 import json
 from datetime import datetime, date, time
+from random import randrange
 
 from django.views.decorators.csrf import csrf_exempt
 # test for post
@@ -43,16 +44,38 @@ def signin(request, username, password):
     return HttpResponse('Succeed')
 
 
-def orders1(request, user, stime, etime, type):
-    """
-    订单的第一个请求阶段
-    :param request:
-    :param user: 用户名
-    :param stime: 充电开始时间
-    :param etime: 充电结束时间
-    :param type: 车型
-    :return:返回可用充电桩的pid
-    """
+@csrf_exempt
+def getorderstatus(request):
+    user = request.POST['username']
+    u = get_object_or_404(User, username=user)
+    s = get_object_or_404(Order, user=u).status
+    r = '%d' % s
+    return HttpResponse(r)
+
+
+@csrf_exempt
+def getchargingstatus(request):
+    user = request.POST['username']
+    u = get_object_or_404(User, username=user)
+    c = get_object_or_404(Order, user=u).charge_p
+    r = '%d' % c
+    return HttpResponse(r)
+
+
+@csrf_exempt
+def getbalance(request):
+    user = request.POST['username']
+    bal = get_object_or_404(User, username=user).balance
+    r = '<html><body>%s</body></html>' % str(bal)
+    return HttpResponse(r)
+
+
+@csrf_exempt
+def orders1(request):
+    # 获取post表单内容
+    stime = request.POST['stime']
+    etime = request.POST['etime']
+    t = request.POST['type']
     # 利用集合set判断时间是否可用
     dt1 = datetime.combine(date.today(), time.min)
     dt2 = datetime.combine(date.today(), time(23, 59, 59))
@@ -60,63 +83,81 @@ def orders1(request, user, stime, etime, type):
     ds2 = int(datetime.timestamp(dt2))
     fullset = set(range(ds1, ds2 + 1, 600))  # 00:00:00~23:59:59
 
-    st = int(datetime.timestamp(stime))
-    et = int(datetime.timestamp(etime))
+    st = int(float(stime))
+    et = int(float(etime))
     time_need = set(range(st, et + 1, 600))
 
-    pos = Position.objects.all()
-    pos_amount = Position.objects.count()
+    pos = Position.objects.filter(type=t)
+    pos_amount = len(pos)
     pos_available = []
     for i in range(pos_amount):
-        f1set = fullset
+        time_available = fullset
         order = pos[i].order_set.filter(status=0)
-        order_amount = pos[i].order_set.filter(status=0).count()
+        order_amount = len(order)
         for j in range(order_amount):
             s = int(datetime.timestamp(order[j].stime))
-            j = int(datetime.timestamp(order[j].etime))
-            time_used = set(range(s, j + 1, 600))
-            time_available = f1set - time_used
+            e = int(datetime.timestamp(order[j].etime))
+            time_used = set(range(s, e, 600))
+            # 解决区间端点的问题
+            time_available = time_available - time_used
         if time_need <= time_available:
             pos_available.append(pos[i].id)
 
-    return JsonResponse(pos_available)
+    return JsonResponse(pos_available, safe=False)
 
 
-def orders2(request, user, pid, stime, ctime, t):
-    """
-    订单请求的第二个阶段
-    :param request:
-    :param pid: 接收充电桩号pid
-    :return:
-    """
-    # 试试使用timestamp类型，应该更加方便地计算时间
+@csrf_exempt
+def orders2(request):
+    # 获取表单内容
+    user = request.POST['user']
+    pid = request.POST['pid']
+    stime = request.POST['stime']
+    etime = request.POST['etime']
+    t = request.POST['type']
+
     pos = get_object_or_404(Position, id=pid)
     # It is equivalent to:
     # try...except...
 
-    # Status.objects.filter(position = pos).update(status=2)
     u = get_object_or_404(User, username=user)
 
-    st = datetime.fromtimestamp(stime)
-    # timestamp->datetime
-    o = Order.objects.create(position=pos, user=u, start_time=st, charge_time=ctime, type=t)
+    st = datetime.fromtimestamp(stime)  # timestamp->datetime
+    et = datetime.fromtimestamp(etime)
+
+    c = ''
+    for i in range(4):
+        c += str(randrange(0, 10))  # This is augmented assignment
+    o = Order.objects.create(position=pos, user=u, stime=st, etime=et, type=t, code=c)
     o.save()
-    return HttpResponse('Succeed!')
+
+    r = '<html><body>%s</body></html>' % c
+    # return 4 bits random numbers
+
+    return HttpResponse(c)
 
 
-def cancel_order(request):
+@csrf_exempt
+def ordercancel(request):
     """
     用于订单的取消，取消成功则返回 succeed
     """
-
-    return HttpResponse('Succeed!')
+    user = request.POST['user']
+    u = get_object_or_404(User, username=user)
+    o = get_object_or_404(Order, user=u)
+    o.status = 1
+    o.save()
+    return HttpResponse('Yes')
 
 
 @csrf_exempt
 # POST方式时必须加
 def test(request):
-    json_data = request.read()
-    # data = json.loads(json_data)
-    with open('D://d.json', 'w+') as f:
-        f.write(str(json_data))
+    # data = json.loads(request.body)
+    # username = data['username']
+    # password = data['password']
+    username = request.POST['username']
+    password = request.POST['password']
+    with open('D://d.txt', 'w+') as f:
+        # f.write(str(username)+str(password))
+        f.write(str(username) + str(password))
     return HttpResponse('Received')

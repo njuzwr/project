@@ -1,18 +1,27 @@
-信息交互说明
+
+11张文瑞 2015/9/10 10:42:16
 Stage1:数据库版本的确认与数据库的发送
     # A is android App, S is server
-    1.A->S:getversion
+    1.A->S:getversion    "GET"
      .S->A:version number
-
-    2.A-S:getdatabase
+      A->S:getDatabase   "GET"
      .S-A:database, use Json
 Stage2:
-    3.A->S:send user/stime/etime/type
-     .S->A:return available pid, use string
-
+    3.A->S:send stime/etime/type
+            stime以timestamp传递，为秒数
+     .S->A:return available pid, use string(Json)
     4.A->S:send pid/user/stime/ctime/type
      .S->A:return auth_code(4 bits random numbers)
 
-Stage3: cancel order
-    5.A->S:send user
+Stage3: 订单取消
+    5.A->S:send(username) user "POST"
      .S->A:return Yes or No
+Stage4:get reservation status
+      A->S:getOrderStatus (username)  "POST"
+      S->A:pid,stime,etime,isCharging 
+      A->S:getChargingStatus (username)"POST"
+      S->A:charging status (1-100)
+
+
+A->S:getBalance(username) "POST"
+S->A:Decimal 

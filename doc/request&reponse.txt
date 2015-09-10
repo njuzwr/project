@@ -1,5 +1,5 @@
-
-11张文瑞 2015/9/10 10:42:16
+__author__:njuzwr
+__date__:2015-9-10
 Stage1:数据库版本的确认与数据库的发送
     # A is android App, S is server
     1.A->S:getversion    "GET"

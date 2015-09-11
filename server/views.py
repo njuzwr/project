@@ -2,7 +2,6 @@
 from django.shortcuts import render, get_object_or_404, get_list_or_404
 from django.http import HttpResponse, JsonResponse
 from django.core.serializers import serialize
-import json
 from datetime import datetime, date, time
 from random import randrange
 
@@ -14,59 +13,78 @@ from server.models import Position, DatabaseVersion, User, Order
 
 
 def getversion(request):
-    "用于获取位置信息的数据库版本，返回字符串"
+    """用于获取位置信息的数据库版本，返回字符串"""
     version = DatabaseVersion.objects.all().last().version
-    response = "<html><body>%d </body></html>" % version
-    return HttpResponse(response)
+    r = "%d" % version
+    return HttpResponse(r)
     # return HttpResponse(version)
 
 
-def getposition(request):
-    "用于处理客户端获取位置信息的请求"
+def getdatabase(request):
+    """用于处理客户端获取位置信息的请求"""
     positions = Position.objects.all()
-    position_num = str(Position.objects.all().count())
+    # position_num = str(Position.objects.all().count())
     position_json = serialize('json', positions)
-    position_dict = json.loads(position_json)
-    position = position_dict + [{"amounts": position_num}]
-    return JsonResponse(position, safe=False)
-    # return HttpResponse(position, content_type="text/plain")
+    # position_dict = json.loads(position_json)
+    # position = position_dict + [{"amounts": position_num}]
+    # return JsonResponse(position_dict, safe=False)
+    return HttpResponse(position_json, content_type="application/json")
 
 
+@csrf_exempt  # POST方法必须加上
 def signup(request, username, password):
-    "用于处理用户的注册及注册信息的保存"
+    """用于处理用户的注册及注册信息的保存"""
 
     return HttpResponse('Succeed')
 
 
-def signin(request, username, password):
-    "用于处理用户的登录验证"
-
-    return HttpResponse('Succeed')
+@csrf_exempt
+def login(request):
+    """用于处理用户的登录验证"""
+    un = request.POST['username']
+    pw = request.POST['password']
+    p = get_object_or_404(User, username=un).password
+    if pw == p:
+        r = 'true'
+    else:
+        r = 'false'
+    return HttpResponse('%s' % r)
 
 
 @csrf_exempt
 def getorderstatus(request):
     user = request.POST['username']
     u = get_object_or_404(User, username=user)
-    s = get_object_or_404(Order, user=u).status
-    r = '%d' % s
-    return HttpResponse(r)
+    o = Order.objects.filter(user=u).last()
+    s = o.status
+    # 每个用户只能用一个未完成的订单状态
+    # 如果正在充电，则返回充电百分比
+    r = 'None'
+    if s == 0:  # 充电未完成
+        r = {'stime': int(datetime.timestamp(o.stime)), 'etime': int(datetime.timestamp(o.etime)),
+             'pid': o.position_id, 'status': o.status, 'code': o.code}
+    elif s == 2:  # 充电过程中，返回充电百分比
+        r = {'stime': int(datetime.timestamp(o.stime)), 'etime': int(datetime.timestamp(o.etime)),
+             'pid': o.position_id, 'status': o.charge_p, 'code': o.code}
+    else:  # 订单已完成
+        r = {'stime': 0, 'etime': 0, 'pid': 0, 'status': o.status, 'code': 'xxxx'}
+    return JsonResponse(r)
 
 
 @csrf_exempt
 def getchargingstatus(request):
     user = request.POST['username']
     u = get_object_or_404(User, username=user)
-    c = get_object_or_404(Order, user=u).charge_p
-    r = '%d' % c
-    return HttpResponse(r)
+    o = Order.objects.filter(user=u).last()
+    s = o.charge_p
+    return HttpResponse('%s' % str(s))
 
 
 @csrf_exempt
 def getbalance(request):
     user = request.POST['username']
     bal = get_object_or_404(User, username=user).balance
-    r = '<html><body>%s</body></html>' % str(bal)
+    r = '%s' % str(bal)
     return HttpResponse(r)
 
 
@@ -109,7 +127,7 @@ def orders1(request):
 @csrf_exempt
 def orders2(request):
     # 获取表单内容
-    user = request.POST['user']
+    user = request.POST['username']
     pid = request.POST['pid']
     stime = request.POST['stime']
     etime = request.POST['etime']
@@ -120,20 +138,22 @@ def orders2(request):
     # try...except...
 
     u = get_object_or_404(User, username=user)
+    orderstatus = Order.objects.filter(user=u).filter(status=0)
 
-    st = datetime.fromtimestamp(stime)  # timestamp->datetime
-    et = datetime.fromtimestamp(etime)
+    st = datetime.fromtimestamp(int(float(stime)))  # timestamp->datetime
+    et = datetime.fromtimestamp(int(float(etime)))
 
     c = ''
     for i in range(4):
         c += str(randrange(0, 10))  # This is augmented assignment
-    o = Order.objects.create(position=pos, user=u, stime=st, etime=et, type=t, code=c)
-    o.save()
 
-    r = '<html><body>%s</body></html>' % c
-    # return 4 bits random numbers
-
-    return HttpResponse(c)
+    if orderstatus:  # 判断是否有未完成的订单
+        r = 'Unfinished order'
+    else:
+        o = Order.objects.create(position=pos, user=u, stime=st, etime=et, type=t, code=c)
+        o.save()
+        r = 'success, %s' % c  # return 4 bits random numbers
+    return HttpResponse(r)
 
 
 @csrf_exempt
@@ -141,12 +161,12 @@ def ordercancel(request):
     """
     用于订单的取消，取消成功则返回 succeed
     """
-    user = request.POST['user']
+    user = request.POST['username']
     u = get_object_or_404(User, username=user)
-    o = get_object_or_404(Order, user=u)
+    o = Order.objects.filter(user=u).last()  # 最近的订单
     o.status = 1
     o.save()
-    return HttpResponse('Yes')
+    return HttpResponse('yes')
 
 
 @csrf_exempt
@@ -161,3 +181,8 @@ def test(request):
         # f.write(str(username)+str(password))
         f.write(str(username) + str(password))
     return HttpResponse('Received')
+
+
+def test2(request, i):
+    x = get_object_or_404(Position, id=i).id
+    return HttpResponse('%d' % x)

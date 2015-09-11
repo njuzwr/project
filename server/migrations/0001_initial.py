@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='DatabaseVersion',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, verbose_name='ID', serialize=False)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('version', models.IntegerField()),
                 ('log', models.CharField(max_length=100, default=None)),
                 ('author', models.CharField(max_length=20, default=None)),
@@ -21,9 +21,21 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.CreateModel(
+            name='Order',
+            fields=[
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                ('stime', models.DateTimeField(default=None)),
+                ('etime', models.DateTimeField(default=None)),
+                ('type', models.CharField(max_length=5, default=None)),
+                ('status', models.IntegerField(default=0)),
+                ('charge_p', models.IntegerField(default=0)),
+                ('code', models.CharField(max_length=4, default=None)),
+            ],
+        ),
+        migrations.CreateModel(
             name='Position',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, verbose_name='ID', serialize=False)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('type', models.CharField(max_length=10, default=None)),
                 ('longitude', models.CharField(max_length=20)),
                 ('latitude', models.CharField(max_length=20)),
@@ -32,22 +44,20 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='User',
             fields=[
-                ('id', models.AutoField(primary_key=True, auto_created=True, verbose_name='ID', serialize=False)),
+                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
                 ('username', models.CharField(max_length=20)),
                 ('password', models.CharField(max_length=20)),
-                ('balance', models.DecimalField(decimal_places=2, max_digits=10)),
+                ('balance', models.DecimalField(max_digits=10, decimal_places=2)),
             ],
         ),
-        migrations.CreateModel(
-            name='Order',
-            fields=[
-                ('user', models.OneToOneField(primary_key=True, default=None, to='server.User', serialize=False)),
-                ('stime', models.DateTimeField(default=None)),
-                ('etime', models.DateTimeField(default=None)),
-                ('type', models.CharField(max_length=5, default=None)),
-                ('status', models.IntegerField(default=0)),
-                ('charge_p', models.CharField(max_length=5, default=None)),
-                ('position', models.ForeignKey(to='server.Position')),
-            ],
+        migrations.AddField(
+            model_name='order',
+            name='position',
+            field=models.ForeignKey(to='server.Position'),
+        ),
+        migrations.AddField(
+            model_name='order',
+            name='user',
+            field=models.OneToOneField(to='server.User'),
         ),
     ]

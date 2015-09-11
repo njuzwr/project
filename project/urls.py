@@ -16,19 +16,20 @@ Including another URLconf
 from django.conf.urls import include, url
 from django.contrib import admin
 
-from server.views import getversion, getposition, orders1, orders2, test
-from server.views import getorderstatus, getchargingstatus, getbalance, ordercancel
+from server.views import getversion, getdatabase, orders1, orders2, test2
+from server.views import getorderstatus, getbalance, ordercancel, login, getchargingstatus
 urlpatterns = [
     url(r'^admin/', include(admin.site.urls)),
     url(r'^getversion/', getversion, name='getversion'),
-    url(r'^getposition/', getposition),
+    url(r'^getdatabase/', getdatabase),
+    url(r'^login/', login),
     url(r'^getorderstatus/', getorderstatus),
-    url(r'^getchargingstatus/', getchargingstatus),
+    url(r'^getchargingstatus', getchargingstatus),
     url(r'^getbalance/', getbalance),
     url(r'^orders1/', orders1),
     url(r'^orders2/', orders2),
-    url(r'^ordercancel', ordercancel),
-    url(r'^test/', test),
+    url(r'^ordercancel/', ordercancel),
+    url(r'^test2/(?P<i>\d+)/', test2),
 
 
 

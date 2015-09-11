@@ -1,0 +1,12 @@
+ip:http://114.212.114.200:8000
+
+可用的username:{zwr,zlq，}
+
+1.getversion:       ip/getversion/
+2.getdatabase:      ip/getdatabase/
+3.getorderstatus:   ip/getorderstatus/          username:zwr 有订单信息 username:zz无订单信息,返回404错误
+4.getchargingstatus ip/getchargingstatus/       初始值为10
+5.getbalance:       ip/getbalance/
+6.orders1:          ip/orders1/
+7.orders2:          暂时不测试 涉及操作数据库
+8.ordercancel:      ip/ordercancel/

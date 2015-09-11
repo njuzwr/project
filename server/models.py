@@ -25,7 +25,7 @@ class Position(models.Model):
 
 class User(models.Model):
     username = models.CharField(max_length=20)
-    password = models.CharField(max_length=20)
+    password = models.CharField(max_length=40)
     balance = models.DecimalField(max_digits=10, decimal_places=2)
 
     def __str__(self):
@@ -34,12 +34,12 @@ class User(models.Model):
 
 class Order(models.Model):
     position = models.ForeignKey(Position)
-    user = models.OneToOneField(User, primary_key=True)
+    user = models.ForeignKey(User)
     stime = models.DateTimeField(default=None)  # 充电开始时间
     etime = models.DateTimeField(default=None)  # 充电结束时间
     type = models.CharField(max_length=5, default=None)  # 车型
     status = models.IntegerField(default=0)  # 订单状态：订单完成或取消为1，默认为0,处于充电中为2
-    charge_p = models.IntegerField(default=0)  # 充电百分比 1-100的整数
+    charge_p = models.IntegerField(default=10)  # 充电百分比 1-100的整数
     code = models.CharField(max_length=4, default=None)
 
     def __str__(self):

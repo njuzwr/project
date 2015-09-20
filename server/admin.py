@@ -22,7 +22,7 @@ class DatabaseVersionAdmin(admin.ModelAdmin):
 
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id', 'stime', 'etime', 'type', 'charge_p', 'code', 'position', 'user')
+    list_display = ('id', 'stime', 'etime', 'type', 'status', 'charge_p', 'code', 'position', 'user')
     search_fields = ['position']
 
 

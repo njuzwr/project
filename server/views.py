@@ -99,11 +99,10 @@ def orders1(request):
     dt2 = datetime.combine(date.today(), time(23, 59, 59))
     ds1 = int(datetime.timestamp(dt1))
     ds2 = int(datetime.timestamp(dt2))
-    fullset = set(range(ds1, ds2 + 1, 600))  # 00:00:00~23:59:59
-
+    fullset = set(range(ds1, ds2 + 1, 60))  # 00:00:00~23:59:59
     st = int(float(stime))
     et = int(float(etime))
-    time_need = set(range(st, et + 1, 600))
+    time_need = set(range(st, et + 1, 60))
 
     pos = Position.objects.filter(type=t)
     pos_amount = len(pos)
@@ -115,7 +114,7 @@ def orders1(request):
         for j in range(order_amount):
             s = int(datetime.timestamp(order[j].stime))
             e = int(datetime.timestamp(order[j].etime))
-            time_used = set(range(s, e, 600))
+            time_used = set(range(s, e, 60))
             # 解决区间端点的问题
             time_available = time_available - time_used
         if time_need <= time_available:

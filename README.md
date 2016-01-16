@@ -1,2 +1,2 @@
-# project
-数据库：sqlite3
+# Django project
+database：sqlite3
